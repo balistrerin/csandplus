@@ -5,24 +5,35 @@
 
 Surface::Surface(const std::string & filename)
 {
+	//Open up stream and set to binary mode
 	std::ifstream file(filename, std::ios::binary);
+	//Older BitMap Header without extra properties
 	BITMAPFILEHEADER bmFileHeader;
+	//read file as array of chars and get the size of file header 
 	file.read(reinterpret_cast<char*>(&bmFileHeader), sizeof(bmFileHeader));
 
 	BITMAPINFOHEADER bmInfoHeader;
 	file.read(reinterpret_cast<char*>(&bmInfoHeader), sizeof(bmInfoHeader));
 
+	//only deal with 24 bit bitmaps
 	assert(bmInfoHeader.biBitCount == 24);
+	//avoid handling compression
 	assert(bmInfoHeader.biCompression == BI_RGB);
 
+	//set width and height
 	width = bmInfoHeader.biWidth;
 	height = bmInfoHeader.biHeight;
 
+	//alocated memory
 	pPixels = new Color[width*height];
 
+	//seek to where pixel data starts
 	file.seekg(bmFileHeader.bfOffBits);
+
+	//calculate padding to account for RGB offsets 
 	const int padding = (4 - (width * 3) % 4) % 4;
 
+	//loop from bottom to top becasue bitmaps load in backwards for some freakin reason!
 	for (int y = height - 1; y >= 0; y--)
 	{
 		for (int x = 0; x < width; x++)
@@ -30,6 +41,7 @@ Surface::Surface(const std::string & filename)
 			PutPixel(x, y, Color(file.get(), file.get(), file.get()));
 		}
 
+		//seek forward offfset padding from current position
 		file.seekg(padding, std::ios::cur);
 
 	}
