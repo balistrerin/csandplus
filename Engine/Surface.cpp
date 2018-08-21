@@ -16,13 +16,37 @@ Surface::Surface(const std::string & filename)
 	file.read(reinterpret_cast<char*>(&bmInfoHeader), sizeof(bmInfoHeader));
 
 	//only deal with 24 bit bitmaps
-	assert(bmInfoHeader.biBitCount == 24);
+	assert(bmInfoHeader.biBitCount == 24 || bmInfoHeader.biBitCount == 32);
 	//avoid handling compression
 	assert(bmInfoHeader.biCompression == BI_RGB);
+	
+	const bool is32b = bmInfoHeader.biBitCount == 32;
 
 	//set width and height
 	width = bmInfoHeader.biWidth;
-	height = bmInfoHeader.biHeight;
+
+	//Testing for backwards row order
+	int yStart;
+	int yEnd;
+	int dy;
+	if (bmInfoHeader.biHeight < 0)
+	{
+		height = -bmInfoHeader.biHeight;
+		yStart = 0;
+		yEnd = height;
+		dy = 1;
+
+
+	}
+	else 
+	{
+		height = bmInfoHeader.biHeight;
+		yStart = height - 1;
+		yEnd = -1;
+		dy = -1;
+
+	}
+
 
 	//alocated memory
 	pPixels = new Color[width*height];
@@ -34,16 +58,23 @@ Surface::Surface(const std::string & filename)
 	const int padding = (4 - (width * 3) % 4) % 4;
 
 	//loop from bottom to top becasue bitmaps load in backwards for some freakin reason!
-	for (int y = height - 1; y >= 0; y--)
+	for (int y = yStart - 1; y != yEnd; y += dy)
 	{
 		for (int x = 0; x < width; x++)
 		{
 			PutPixel(x, y, Color(file.get(), file.get(), file.get()));
+			//check for 32 bits
+			if (is32b)
+			{
+				file.seekg(1, std::ios::cur);
+			}
 		}
 
 		//seek forward offfset padding from current position
-		file.seekg(padding, std::ios::cur);
-
+		if (!is32b) 
+		{
+			file.seekg(padding, std::ios::cur);
+		}
 	}
 }
 
