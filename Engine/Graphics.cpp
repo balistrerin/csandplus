@@ -333,6 +333,42 @@ void Graphics::DrawSpriteNonChroma(int x, int y, const RectI& srcRect, const Sur
 	}
 }
 
+void Graphics::DrawSpriteNonChroma(int x, int y, RectI srcRect, const RectI clip, const Surface & s)
+{
+
+	assert(srcRect.left >= 0);
+	assert(srcRect.right <= s.GetWidth());
+	assert(srcRect.top > = 0);
+	assert(srcRect.bottom <= s.GetHeight());
+
+	if (x < clip.left)
+	{
+		srcRect.left += clip.left - x;
+		x = clip.left;
+	}
+	if (y < clip.top)
+	{
+		srcRect.top += clip.top - y;
+		y = clip.top;
+	}
+	if (x + srcRect.GetWidth() > clip.right)
+	{
+		srcRect.right -= x + srcRect.GetWidth() - clip.right;
+	}
+	if (y + srcRect.GetHeight() > clip.bottom)
+	{
+		srcRect.bottom -= y + srcRect.GetHeight() - clip.bottom;
+	}
+	for (int sy = srcRect.top; sy < srcRect.bottom; sy++)
+	{
+		for (int sx = srcRect.left; sx < srcRect.right; sx++)
+		{
+			PutPixel(x + sx - srcRect.left, y + sy - srcRect.top, s.GetPixel(sx, sy));
+		}
+	}
+
+}
+
 void Graphics::DrawSprite(int x, int y, RectI srcRect, const RectI clip, const Surface & s, Color chroma)
 {
 
@@ -373,42 +409,6 @@ void Graphics::DrawSprite(int x, int y, RectI srcRect, const RectI clip, const S
 		}
 	}
 
-
-}
-
-void Graphics::DrawSpriteNonChroma(int x, int y, RectI srcRect, const RectI clip, const Surface & s)
-{
-
-	assert(srcRect.left >= 0);
-	assert(srcRect.right <= s.GetWidth());
-	assert(srcRect.top > = 0);
-	assert(srcRect.bottom <= s.GetHeight());
-
-	if (x < clip.left)
-	{
-		srcRect.left += clip.left - x;
-		x = clip.left;
-	}
-	if (y < clip.top)
-	{
-		srcRect.top += clip.top - y;
-		y = clip.top;
-	}
-	if (x + srcRect.GetWidth() > clip.right)
-	{
-		srcRect.right -= x + srcRect.GetWidth() - clip.right;
-	}
-	if (y + srcRect.GetHeight() > clip.bottom)
-	{
-		srcRect.bottom -= y + srcRect.GetHeight() - clip.bottom;
-	}
-	for (int sy = srcRect.top; sy < srcRect.bottom; sy++)
-	{
-		for (int sx = srcRect.left; sx < srcRect.right; sx++)
-		{
-			PutPixel(x + sx - srcRect.left, y + sy - srcRect.top, s.GetPixel(sx, sy));
-		}
-	}
 
 }
 
